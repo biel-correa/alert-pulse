@@ -188,6 +188,8 @@
   },
   "active": "b3122603ee86ca5b",
   "lastOpenFiles": [
+    "AWS_ARCHITECTURE.md",
+    "APPLICATION_ARCHITECTURE.md",
     "GraphQL/Schema.md",
     "Infrastructure/AWS-Console.md",
     "Infrastructure/AWS-Setup.md",
@@ -216,8 +218,6 @@
     "Backend/Operational-Endpoints.md",
     "Backend/Webhook-Ingestion.md",
     "Backend/DotNet-Architecture.md",
-    "GraphQL/Resolvers-and-Realtime.md",
-    "Architecture/Event-Driven-Design.md",
     "Templates",
     "Runbooks",
     "Infrastructure",
