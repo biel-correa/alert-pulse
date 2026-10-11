@@ -1,0 +1,151 @@
+/* Alert Pulse - NOC/SRE Operational Dark Theme Global Styles */
+
+:root {
+  --bg-primary: #0b0f19;
+  --bg-secondary: #0f172a;
+  --bg-card: #1e293b;
+  --bg-card-hover: #243248;
+  --border-color: #334155;
+  --border-focus: #475569;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --color-critical: #ef4444;
+  --color-critical-bg: rgba(239, 68, 68, 0.15);
+  --color-critical-border: #ef4444;
+
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.15);
+  --color-warning-border: #f59e0b;
+
+  --color-info: #3b82f6;
+  --color-info-bg: rgba(59, 130, 246, 0.15);
+  --color-info-border: #3b82f6;
+
+  --color-success: #10b981;
+  --color-success-bg: rgba(16, 185, 129, 0.15);
+  --color-success-border: #10b981;
+
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, 'Courier New', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* Custom Scrollbars for SRE Dashboard */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+/* Common Operational Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  &.badge-critical {
+    background-color: var(--color-critical-bg);
+    color: var(--color-critical);
+    border: 1px solid var(--color-critical-border);
+  }
+
+  &.badge-warning {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+    border: 1px solid var(--color-warning-border);
+  }
+
+  &.badge-info {
+    background-color: var(--color-info-bg);
+    color: #60a5fa;
+    border: 1px solid var(--color-info-border);
+  }
+
+  &.badge-success {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+    border: 1px solid var(--color-success-border);
+  }
+}
+
+/* Action Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  border: 1px solid transparent;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.btn-secondary {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+
+    &:hover:not(:disabled) {
+      background-color: var(--bg-card-hover);
+      border-color: var(--border-focus);
+    }
+  }
+
+  &.btn-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-color: var(--color-critical);
+
+    &:hover:not(:disabled) {
+      background-color: rgba(239, 68, 68, 0.35);
+      color: #ffffff;
+    }
+  }
+}

@@ -1,0 +1,16 @@
+#set($events = [])
+#foreach($item in $context.result.items)
+  #set($event = {
+    "id": $item.Id,
+    "endpointId": $item.EndpointId,
+    "timestamp": $item.CreatedAt,
+    "statusCode": $item.StatusCode,
+    "latencyMs": $item.LatencyMs,
+    "severity": $item.Severity,
+    "status": $item.Status,
+    "payloadSnippet": $item.Payload,
+    "errorMessage": $item.ErrorMessage
+  })
+  $util.qr($events.add($event))
+#end
+$util.toJson($events)

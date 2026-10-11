@@ -1,0 +1,12 @@
+{
+  "version": "2018-05-29",
+  "operation": "Query",
+  "index": "GSI1-Severity",
+  "query": {
+    "expression": "SeverityStatus = :sevStatus",
+    "expressionValues": {
+      ":sevStatus": { "S": "${context.arguments.severity}#OPEN" }
+    }
+  },
+  "scanIndexForward": false
+}

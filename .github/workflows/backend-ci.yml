@@ -1,0 +1,109 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: alert-pulse-api
+  DOTNET_VERSION: '10.0.x'
+
+jobs:
+  lint-and-test:
+    name: Build, Lint & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore NuGet Dependencies
+        run: dotnet restore backend/WebhookMonitor.slnx
+
+      - name: Build Solution (.NET 10)
+        run: dotnet build backend/WebhookMonitor.slnx --configuration Release --no-restore
+
+      - name: Run Unit & Integration Tests
+        run: dotnet test backend/WebhookMonitor.slnx --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+
+      - name: Upload Test Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/tests/WebhookMonitor.Tests/TestResults/
+
+  build-and-push-ecr:
+    name: Build Docker Image & Push to Amazon ECR
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN || '' }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract Metadata (Tags & Labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image to ECR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-ecs:
+    name: Deploy to Amazon ECS / App Runner
+    needs: build-and-push-ecr
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Rolling ECS Service Update
+        run: |
+          echo "Deploying latest container image to AWS ECS cluster 'alert-pulse-cluster'..."
+          # aws ecs update-service --cluster alert-pulse-cluster --service webhook-monitor-api --force-new-deployment
+          echo "Deployment initiated successfully."

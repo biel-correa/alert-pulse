@@ -1,0 +1,115 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+"""
+Severity levels computed from HTTP status codes and response latencies.
+"""
+enum SeverityLevel {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+"""
+Operational status of a webhook incident.
+"""
+enum IncidentStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+"""
+Represents a captured webhook occurrence.
+"""
+type WebhookEvent {
+  id: ID!
+  endpointId: ID!
+  timestamp: String!
+  statusCode: Int!
+  latencyMs: Int!
+  severity: SeverityLevel!
+  status: IncidentStatus!
+  payloadSnippet: String
+  errorMessage: String
+}
+
+"""
+Paginated collection of events for historical inspection.
+"""
+type EventConnection {
+  items: [WebhookEvent!]!
+  nextToken: String
+}
+
+type Query {
+  """
+  Retrieves recent events for a given endpoint in descending chronological order.
+  """
+  getRecentEvents(
+    endpointId: ID!
+    limit: Int = 20
+    nextToken: String
+  ): EventConnection!
+
+  """
+  Retrieves all open incidents filtered by severity level via GSI1-Severity.
+  """
+  getOpenIncidents(
+    severity: SeverityLevel!
+  ): [WebhookEvent!]!
+}
+
+type Mutation {
+  """
+  Publishes a newly ingested event. Invoked by the .NET API to trigger real-time subscriptions.
+  """
+  publishWebhookEvent(event: WebhookEventInput!): WebhookEvent!
+
+  """
+  Updates operational status of an incident (e.g., Acknowledge or Resolve).
+  """
+  updateEventStatus(
+    id: ID!
+    endpointId: ID!
+    status: IncidentStatus!
+  ): WebhookEvent!
+}
+
+type Subscription {
+  """
+  Receives all webhook events in real time. Supports optional filtering by endpointId.
+  """
+  onNewEvent(endpointId: ID): WebhookEvent
+    @aws_subscribe(mutations: ["publishWebhookEvent"])
+
+  """
+  Receives only CRITICAL severity incidents in real time.
+  """
+  onCriticalIncident: WebhookEvent
+    @aws_subscribe(mutations: ["publishWebhookEvent"])
+
+  """
+  Receives operational status updates (e.g., Incident Acknowledged or Resolved).
+  """
+  onEventStatusUpdated(endpointId: ID): WebhookEvent
+    @aws_subscribe(mutations: ["updateEventStatus"])
+}
+
+"""
+Input payload supplied by the .NET API when publishing events.
+"""
+input WebhookEventInput {
+  id: ID!
+  endpointId: ID!
+  timestamp: String!
+  statusCode: Int!
+  latencyMs: Int!
+  severity: SeverityLevel!
+  status: IncidentStatus!
+  payloadSnippet: String
+  errorMessage: String
+}

@@ -1,0 +1,26 @@
+{
+  "name": "alert-pulse-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo workspace for Alert Pulse - Webhook Dispatcher & Incident Monitor",
+  "scripts": {
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:init": "docker exec alert-pulse-localstack bash /etc/localstack/init/ready.d/init-aws.sh",
+    "infra:status": "docker compose ps",
+    "backend:build": "dotnet build backend/WebhookMonitor.slnx",
+    "backend:dev": "dotnet run --project backend/src/WebhookMonitor/WebhookMonitor.csproj --urls \"http://localhost:5000\"",
+    "backend:watch": "dotnet watch run --project backend/src/WebhookMonitor/WebhookMonitor.csproj --urls \"http://localhost:5000\"",
+    "backend:test": "dotnet test backend/WebhookMonitor.slnx",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:dev": "npm --prefix frontend run start",
+    "frontend:test": "npm --prefix frontend test -- --watch=false --browsers=ChromeHeadless",
+    "build:all": "npm run backend:build && npm run frontend:build",
+    "test:all": "npm run backend:test && npm run frontend:test",
+    "dev": "concurrently -n \"INFRA,BACKEND,FRONTEND\" -c \"cyan,magenta,blue\" \"npm run infra:up\" \"npm run backend:dev\" \"npm run frontend:dev\""
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "concurrently": "^8.2.2"
+  }
+}

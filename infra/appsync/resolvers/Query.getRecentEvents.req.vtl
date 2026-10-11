@@ -1,0 +1,16 @@
+{
+  "version": "2018-05-29",
+  "operation": "Query",
+  "query": {
+    "expression": "PK = :pk AND begins_with(SK, :skPrefix)",
+    "expressionValues": {
+      ":pk": { "S": "ENDPOINT#${context.arguments.endpointId}" },
+      ":skPrefix": { "S": "EVENT#" }
+    }
+  },
+  "scanIndexForward": false,
+  "limit": $util.defaultIfNull($context.arguments.limit, 20),
+  #if( $context.arguments.nextToken )
+    "nextToken": "$context.arguments.nextToken"
+  #end
+}

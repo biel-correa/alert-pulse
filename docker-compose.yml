@@ -1,0 +1,136 @@
+services:
+  # ---------------------------------------------------------------------------
+  # LocalStack: Emulation of DynamoDB, SNS, and SQS
+  # ---------------------------------------------------------------------------
+  localstack:
+    container_name: alert-pulse-localstack
+    image: localstack/localstack:3.8.1
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb,sns,sqs
+      - AWS_DEFAULT_REGION=us-east-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./infra/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "localstack-data:/var/lib/localstack"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - alert-pulse-net
+
+  # ---------------------------------------------------------------------------
+  # DynamoDB Admin: Visual dashboard to inspect items, PK/SK, GSIs, and TTL
+  # Web UI available at: http://localhost:8001
+  # ---------------------------------------------------------------------------
+  dynamodb-admin:
+    container_name: alert-pulse-dynamodb-admin
+    image: aaronshaf/dynamodb-admin:latest
+    ports:
+      - "8001:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      localstack:
+        condition: service_healthy
+    networks:
+      - alert-pulse-net
+
+  # ---------------------------------------------------------------------------
+  # Mailpit: Local inbox for previewing SNS alert emails
+  # Web UI available at: http://localhost:8025 (SMTP on port 1025)
+  # ---------------------------------------------------------------------------
+  mailpit:
+    container_name: alert-pulse-mailpit
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      - MP_SMTP_AUTH_ACCEPT_ANY=1
+      - MP_SMTP_AUTH_ALLOW_INSECURE=1
+    networks:
+      - alert-pulse-net
+
+  # ---------------------------------------------------------------------------
+  # Webhook Sink (HTTP Echo): Mock receiver for webhook replay testing
+  # Available at: http://localhost:8080
+  # ---------------------------------------------------------------------------
+  webhook-sink:
+    container_name: alert-pulse-webhook-sink
+    image: mendhak/http-https-echo:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - HTTP_PORT=8080
+    networks:
+      - alert-pulse-net
+
+  # ---------------------------------------------------------------------------
+  # Backend: .NET 10 Webhook Ingestion, Classification & Dispatcher API
+  # Available at: http://localhost:5000 (Swagger Docs at: /swagger)
+  # ---------------------------------------------------------------------------
+  backend:
+    container_name: alert-pulse-backend
+    image: alert-pulse-backend:latest
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "5050:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - AWS__ServiceURL=http://localstack:4566
+      - AWS__Region=us-east-1
+      - AWS__UseLocalStack=true
+      - AWS__DynamoDbTable=MonitoringHub
+      - AWS__SnsAlertTopicArn=arn:aws:sns:us-east-1:000000000000:WebhookCriticalAlerts
+      - AppSync__GraphQLEndpoint=http://localstack:4566/graphql
+      - AppSync__ApiKey=da2-test-api-key
+    depends_on:
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - alert-pulse-net
+
+  # ---------------------------------------------------------------------------
+  # Frontend: Angular 22 Operations & Incident Monitoring Dashboard
+  # Available at: http://localhost:4200
+  # ---------------------------------------------------------------------------
+  frontend:
+    container_name: alert-pulse-frontend
+    image: alert-pulse-frontend:latest
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - alert-pulse-net
+
+networks:
+  alert-pulse-net:
+    name: alert-pulse-network
+    driver: bridge
+
+volumes:
+  localstack-data:
+    name: alert-pulse-localstack-data

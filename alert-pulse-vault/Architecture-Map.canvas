@@ -1,0 +1,42 @@
+{
+	"nodes":[
+		{"id":"node-home","type":"file","file":"00 - Home.md","x":0,"y":0,"width":320,"height":240},
+		{"id":"node-roadmap","type":"file","file":"Roadmap.md","x":-420,"y":0,"width":340,"height":260},
+		{"id":"node-monorepo","type":"file","file":"Architecture/Monorepo-Structure.md","x":420,"y":-600,"width":340,"height":260},
+		{"id":"node-arch-overview","type":"file","file":"Architecture/Overview.md","x":420,"y":-280,"width":340,"height":260},
+		{"id":"node-sys-flow","type":"file","file":"Architecture/System-Flow.md","x":840,"y":-280,"width":340,"height":260},
+		{"id":"node-event-driven","type":"file","file":"Architecture/Event-Driven-Design.md","x":1260,"y":-280,"width":340,"height":260},
+		{"id":"node-backend-arch","type":"file","file":"Backend/DotNet-Architecture.md","x":420,"y":40,"width":340,"height":260},
+		{"id":"node-webhook-ingestion","type":"file","file":"Backend/Webhook-Ingestion.md","x":840,"y":40,"width":340,"height":260},
+		{"id":"node-service-impl","type":"file","file":"Backend/Service-Implementations.md","x":1260,"y":40,"width":340,"height":260},
+		{"id":"node-frontend-arch","type":"file","file":"Frontend/Angular-Architecture.md","x":420,"y":360,"width":340,"height":260},
+		{"id":"node-monitoring-svc","type":"file","file":"Frontend/Monitoring-Service.md","x":840,"y":360,"width":340,"height":260},
+		{"id":"node-dashboard-comp","type":"file","file":"Frontend/Dashboard-Component.md","x":1260,"y":360,"width":340,"height":260},
+		{"id":"node-ddb-design","type":"file","file":"Data/DynamoDB-Design.md","x":420,"y":680,"width":340,"height":260},
+		{"id":"node-access-patterns","type":"file","file":"Data/Access-Patterns.md","x":840,"y":680,"width":340,"height":260},
+		{"id":"node-graphql-schema","type":"file","file":"GraphQL/Schema.md","x":1260,"y":680,"width":340,"height":260},
+		{"id":"node-localstack","type":"file","file":"Infrastructure/LocalStack-Docker.md","x":420,"y":1000,"width":340,"height":260},
+		{"id":"node-local-dev","type":"file","file":"Runbooks/Local-Development.md","x":840,"y":1000,"width":340,"height":260},
+		{"id":"node-incident-resp","type":"file","file":"Runbooks/Incident-Response.md","x":1260,"y":1000,"width":340,"height":260}
+	],
+	"edges":[
+		{"id":"edge-home-roadmap","fromNode":"node-home","fromSide":"left","toNode":"node-roadmap","toSide":"right"},
+		{"id":"edge-home-monorepo","fromNode":"node-home","fromSide":"right","toNode":"node-monorepo","toSide":"left"},
+		{"id":"edge-monorepo-arch","fromNode":"node-monorepo","fromSide":"bottom","toNode":"node-arch-overview","toSide":"top"},
+		{"id":"edge-home-arch","fromNode":"node-home","fromSide":"right","toNode":"node-arch-overview","toSide":"left"},
+		{"id":"edge-arch-flow","fromNode":"node-arch-overview","fromSide":"right","toNode":"node-sys-flow","toSide":"left"},
+		{"id":"edge-flow-event","fromNode":"node-sys-flow","fromSide":"right","toNode":"node-event-driven","toSide":"left"},
+		{"id":"edge-home-backend","fromNode":"node-home","fromSide":"right","toNode":"node-backend-arch","toSide":"left"},
+		{"id":"edge-backend-ingestion","fromNode":"node-backend-arch","fromSide":"right","toNode":"node-webhook-ingestion","toSide":"left"},
+		{"id":"edge-ingestion-impl","fromNode":"node-webhook-ingestion","fromSide":"right","toNode":"node-service-impl","toSide":"left"},
+		{"id":"edge-home-frontend","fromNode":"node-home","fromSide":"right","toNode":"node-frontend-arch","toSide":"left"},
+		{"id":"edge-frontend-svc","fromNode":"node-frontend-arch","fromSide":"right","toNode":"node-monitoring-svc","toSide":"left"},
+		{"id":"edge-svc-dash","fromNode":"node-monitoring-svc","fromSide":"right","toNode":"node-dashboard-comp","toSide":"left"},
+		{"id":"edge-home-data","fromNode":"node-home","fromSide":"right","toNode":"node-ddb-design","toSide":"left"},
+		{"id":"edge-ddb-access","fromNode":"node-ddb-design","fromSide":"right","toNode":"node-access-patterns","toSide":"left"},
+		{"id":"edge-access-graphql","fromNode":"node-access-patterns","fromSide":"right","toNode":"node-graphql-schema","toSide":"left"},
+		{"id":"edge-home-infra","fromNode":"node-home","fromSide":"right","toNode":"node-localstack","toSide":"left"},
+		{"id":"edge-infra-dev","fromNode":"node-localstack","fromSide":"right","toNode":"node-local-dev","toSide":"left"},
+		{"id":"edge-dev-incident","fromNode":"node-local-dev","fromSide":"right","toNode":"node-incident-resp","toSide":"left"}
+	]
+}

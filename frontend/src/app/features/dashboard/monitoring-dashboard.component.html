@@ -1,0 +1,136 @@
+<div class="dashboard-container">
+  <!-- Topbar with Metrics and Actions -->
+  <header class="dashboard-header">
+    <div class="brand">
+      <h1>Alert Pulse <span>Live Incident Hub</span></h1>
+      <div class="connection-status" [class.connected]="appSync.isConnected()">
+        <span class="status-dot"></span>
+        <span class="status-text">{{ appSync.isConnected() ? 'WebSocket Connected' : 'Connecting / Reconnecting...' }}</span>
+        @if (!appSync.isConnected()) {
+          <button (click)="reconnectWebSocket()" class="btn-reconnect" title="Manual Reconnect">↻</button>
+        }
+      </div>
+    </div>
+
+    <!-- Real-Time Metrics (Computed Signals) -->
+    <div class="metrics-bar">
+      <div class="metric-card">
+        <span class="label">Critical Incidents</span>
+        <span class="value critical">{{ monitor.criticalCount() }}</span>
+      </div>
+      <div class="metric-card">
+        <span class="label">Open Incidents</span>
+        <span class="value">{{ monitor.openCount() }}</span>
+      </div>
+      <div class="metric-card">
+        <span class="label">Average Latency</span>
+        <span class="value">{{ monitor.averageLatency() }}ms</span>
+      </div>
+      <div class="metric-card">
+        <span class="label">Buffered Events</span>
+        <span class="value">{{ monitor.activeIncidents().length }}</span>
+      </div>
+    </div>
+
+    <!-- Pipeline Testing Actions -->
+    <div class="simulation-actions">
+      <button 
+        (click)="triggerSimulation(false)" 
+        [disabled]="isSimulating()" 
+        class="btn btn-secondary">
+        ⚡ Simulate OK (200)
+      </button>
+      <button 
+        (click)="triggerSimulation(true)" 
+        [disabled]="isSimulating()" 
+        class="btn btn-danger">
+        🔥 Simulate Critical (500)
+      </button>
+    </div>
+  </header>
+
+  <!-- Notification Banner / Feedback -->
+  @if (feedbackMessage()) {
+    <div class="feedback-banner" [class]="'feedback-' + feedbackType()">
+      <span>{{ feedbackMessage() }}</span>
+      <button (click)="dismissFeedback()" class="btn-dismiss">&times;</button>
+    </div>
+  }
+
+  <!-- Live Incident Stream Table -->
+  <main class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Endpoint</th>
+          <th>HTTP Code</th>
+          <th>Latency</th>
+          <th>Severity</th>
+          <th>Details & Error</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of monitor.activeIncidents(); track item.id) {
+          <tr [class]="'row-' + item.severity.toLowerCase()">
+            <td>
+              <span class="status-tag" [class]="item.status.toLowerCase()">
+                {{ item.status }}
+              </span>
+            </td>
+            <td class="endpoint-cell">
+              <code>{{ item.endpointId }}</code>
+            </td>
+            <td>
+              <strong 
+                [class.text-danger]="item.statusCode >= 500"
+                [class.text-warning]="item.statusCode >= 400 && item.statusCode < 500"
+                [class.text-success]="item.statusCode < 400">
+                {{ item.statusCode }}
+              </strong>
+            </td>
+            <td>{{ item.latencyMs }}ms</td>
+            <td>
+              <span class="badge" [class]="'badge-' + item.severity.toLowerCase()">
+                <span class="badge-dot"></span>
+                {{ item.severity }}
+              </span>
+            </td>
+            <td class="error-cell">
+              @if (item.errorMessage) {
+                <span class="error-text">{{ item.errorMessage }}</span>
+              } @else if (item.payloadSnippet) {
+                <span class="payload-text">{{ item.payloadSnippet }}</span>
+              } @else {
+                <span class="muted-text">—</span>
+              }
+            </td>
+            <td class="actions-cell">
+              @if (item.status === 'OPEN') {
+                <button (click)="ack(item)" class="btn-action ack">
+                  Acknowledge
+                </button>
+              }
+              @if (item.statusCode >= 400) {
+                <button (click)="retry(item)" class="btn-action retry">
+                  Retry
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty-state">
+              <div class="empty-state-content">
+                <span class="empty-icon">📡</span>
+                <p>No webhook events recorded yet.</p>
+                <small>Awaiting live third-party dispatch or click "Simulate" above to test the ingestion pipeline.</small>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </main>
+</div>

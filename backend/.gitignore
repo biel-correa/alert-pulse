@@ -1,0 +1,11 @@
+bin/
+obj/
+publish/
+publish-lambda/
+publish-lambda-*/
+*.zip
+*.user
+*.suo
+.vs/
+.idea/
+.vscode/
