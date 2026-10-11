@@ -35,10 +35,15 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Inject Environment from GitHub Secret
-        if: "${{ secrets.FRONTEND_ENVIRONMENT_TS != '' }}"
+        env:
+          ENV_CONTENT: ${{ secrets.FRONTEND_ENVIRONMENT_TS }}
         run: |
-          echo "Writing frontend/src/environments/environment.ts from FRONTEND_ENVIRONMENT_TS secret..."
-          echo "${{ secrets.FRONTEND_ENVIRONMENT_TS }}" > frontend/src/environments/environment.ts
+          if [ -n "$ENV_CONTENT" ]; then
+            echo "Writing frontend/src/environments/environment.ts from FRONTEND_ENVIRONMENT_TS secret..."
+            printf '%s\n' "$ENV_CONTENT" > frontend/src/environments/environment.ts
+          else
+            echo "FRONTEND_ENVIRONMENT_TS secret is empty or not provided. Using existing environment file."
+          fi
 
       - name: Install Frontend Dependencies
         working-directory: frontend
